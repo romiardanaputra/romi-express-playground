@@ -19,6 +19,36 @@ app.listen(PORT, () => {
   console.info(`server running on port ${PORT}`);
 });
 
+/**
+ * A middleware function that logs information about incoming HTTP requests.
+ *
+ * @param {object} req - The incoming HTTP request object.
+ * @param {object} res - The outgoing HTTP response object.
+ * @param {function} next - A function to call to continue processing the request.
+ * @return {undefined}
+ */
+const loggingMiddleware = (req, res, next) => {
+  console.log("log");
+  console.log(`${req.method} - ${req.url}`);
+  next();
+};
+
+const resolveUserIdx = (req, res, next) => {
+  const {
+    body,
+    params: { id },
+  } = req;
+  const parseId = parseInt(id);
+  if (isNaN(parseId)) return res.status(400).send({ msg: "invalid request" });
+  const userIdx = users.findIndex((user) => user.id === parseId);
+  if (userIdx === -1) return res.sendStatus(404);
+  req.userIdx = userIdx;
+  console.log("result inside resolveUserIdx", userIdx);
+  next();
+};
+
+app.use(loggingMiddleware);
+
 app.get("/", (req, res) => {
   res.status(201).send({ msg: "hello" });
 });
@@ -90,30 +120,28 @@ app.get("/api/v1/users/:id", (req, res) => {
 });
 
 // patch \\ use to update partial field
-app.patch("/api/v1/users/:id", (req, res) => {
-  const {
-    body,
-    params: { id },
-  } = req;
-  const parseId = parseInt(id);
-  if (isNaN(parseId)) return res.status(400).send({ msg: "invalid request" });
-  const userIdx = users.findIndex((user) => user.id === parseId);
-  if (userIdx === -1) return res.sendStatus(404);
+app.patch("/api/v1/users/:id", resolveUserIdx, (req, res) => {
+  const { body, userIdx } = req;
   users[userIdx] = { ...users[userIdx], ...body };
   return res.sendStatus(200);
 });
 
 // put \\ use to update entire fields
-app.put("/api/v1/users/:id", (req, res) => {
+app.put("/api/v1/users/:id", resolveUserIdx, (req, res) => {
+  const { body, userIdx } = req;
+  users[userIdx] = { id: users[userIdx].id, ...body };
+  return res.sendStatus(200);
+});
+
+// delete
+app.delete("/api/v1/users/:id", (req, res) => {
   const {
-    body,
     params: { id },
   } = req;
   const parseId = parseInt(id);
-  if (isNaN(parseId)) return res.status(400).send({ msg: "invalid request" });
+  if (isNaN(parseId)) return res.sendStatus(400);
   const userIdx = users.findIndex((user) => user.id === parseId);
   if (userIdx === -1) return res.sendStatus(404);
-  users[userIdx] = { id: parseId, ...body };
+  users.splice(userIdx);
   return res.sendStatus(200);
 });
-// delete
