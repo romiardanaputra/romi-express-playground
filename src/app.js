@@ -1,6 +1,13 @@
 import express from "express";
-import { body, query, validationResult, matchedData } from "express-validator";
+import {
+  body,
+  query,
+  validationResult,
+  matchedData,
+  checkSchema,
+} from "express-validator";
 import { users } from "./data/index.js";
+import { createUserSchema } from "./validations/users.js";
 
 const app = express();
 
@@ -47,55 +54,30 @@ app.get("/", (req, res) => {
 });
 
 // get request
-app.get(
-  "/api/v1/users",
-  query("filter")
-    .isString()
-    .withMessage('"filter" must be a string')
-    .notEmpty()
-    .withMessage('"filter" must not be empty')
-    .isLength({ min: 3, max: 10 })
-    .withMessage('"filter" must be between 3 and 10 characters'),
-  (req, res) => {
-    // console.log(req["express-validator#contexts"]);
-    const result = validationResult(req);
-    console.log(result);
-    const {
-      query: { filter, value },
-    } = req;
-    if (filter && value) {
-      return res.send(users.filter((user) => user[filter].includes(value)));
-    }
-    return res.send(users);
+app.get("/api/v1/users", checkSchema(filterUserSchema), (req, res) => {
+  // console.log(req["express-validator#contexts"]);
+  const result = validationResult(req);
+  console.log(result);
+  const {
+    query: { filter, value },
+  } = req;
+  if (filter && value) {
+    return res.send(users.filter((user) => user[filter].includes(value)));
   }
-);
+  return res.send(users);
+});
 
 // post request
-app.post(
-  "/api/v1/users",
-  [
-    body("name")
-      .notEmpty()
-      .withMessage('"name" is required')
-      .isString()
-      .withMessage('"name" must be a string'),
-    body("age")
-      .notEmpty()
-      .withMessage('"age" is required')
-      .isString()
-      .withMessage('"age" must be a string'),
-  ],
-  (req, res) => {
-    const result = validationResult(req);
-    console.log(result);
-    if (!result.isEmpty())
-      return res.status(400).send({ errors: result.array() });
-    const data = matchedData(req);
-    const createUser = { id: users[users.length - 1].id + 1, ...data };
-    users.push(createUser);
-    return res.status(201).send(createUser);
-  }
-);
+app.post("/api/v1/users", checkSchema(createUserSchema), (req, res) => {
+  const result = validationResult(req);
+  console.log(result);
+  if (!result.isEmpty())
+    return res.status(400).send({ errors: result.array() });
+  const data = matchedData(req);
+  const createUser = { id: users[users.length - 1].id + 1, ...data };
+  users.push(createUser);
+  return res.status(201).send(createUser);
+});
 
 // get request with params
 app.get("/api/v1/users/:id", resolveUserIdx, (req, res) => {
