@@ -1,5 +1,4 @@
 import express from "express";
-import connectDB from "../src/config/db.js";
 
 const app = express();
 
@@ -7,14 +6,6 @@ app.use(express.json());
 
 const PORT = 3333;
 
-// const startServer = async () => {
-//   await connectDB();
-//   app.listen(PORT, () => {
-//     console.info(`server running on port ${PORT}`);
-//   });
-// };
-
-// startServer();
 app.listen(PORT, () => {
   console.info(`server running on port ${PORT}`);
 });
@@ -88,34 +79,16 @@ app.get("/api/v1/users", (req, res) => {
 // post request
 app.post("/api/v1/users", (req, res) => {
   const { body } = req;
-  console.log(body);
   const createUser = { id: users[users.length - 1].id + 1, ...body };
   users.push(createUser);
   return res.status(201).send(createUser);
 });
 
-// const testUser = {
-//   id: 4,
-//   name: "test",
-//   age: "30",
-// };
-
-// const result = { ...users[0] };
-// console.log(result);
-
 // get request with params
-app.get("/api/v1/users/:id", (req, res) => {
-  const parseId = parseInt(req.params.id);
-  if (isNaN(parseId)) {
-    res.status(400).send({ msg: "invalid id" });
-  }
-  // console.log(res.json({ id: parseId, name: "romi", age: "30" }));
-  // console.log(req.statusCode)
-
-  const findUser = users.find((user) => user.id === parseId);
-  if (!findUser) {
-    return res.status(404).send({ msg: "user not found" });
-  }
+app.get("/api/v1/users/:id", resolveUserIdx, (req, res) => {
+  const { userIdx } = req;
+  const findUser = users[userIdx];
+  if (!findUser) return res.sendStatus(404);
   return res.send(findUser);
 });
 
@@ -134,14 +107,22 @@ app.put("/api/v1/users/:id", resolveUserIdx, (req, res) => {
 });
 
 // delete
-app.delete("/api/v1/users/:id", (req, res) => {
-  const {
-    params: { id },
-  } = req;
-  const parseId = parseInt(id);
-  if (isNaN(parseId)) return res.sendStatus(400);
-  const userIdx = users.findIndex((user) => user.id === parseId);
-  if (userIdx === -1) return res.sendStatus(404);
+app.delete("/api/v1/users/:id", resolveUserIdx, (req, res) => {
+  const { userIdx } = req;
   users.splice(userIdx);
   return res.sendStatus(200);
 });
+
+// experimental area
+
+// const testUser = {
+//   id: 4,
+//   name: "test",
+//   age: "30",
+// };
+
+// const result = { ...users[0] };
+// console.log(result);
+
+// console.log(res.json({ id: parseId, name: "romi", age: "30" }));
+// console.log(req.statusCode)
