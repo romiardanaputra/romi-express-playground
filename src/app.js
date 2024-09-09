@@ -1,5 +1,6 @@
 import express from "express";
 import usersRouter from "./routes/users.js";
+import routes from "./routes/index.js";
 
 const app = express();
 
@@ -11,14 +12,6 @@ app.listen(PORT, () => {
   console.info(`server running on port ${PORT}`);
 });
 
-/**
- * A middleware function that logs information about incoming HTTP requests.
- *
- * @param {object} req - The incoming HTTP request object.
- * @param {object} res - The outgoing HTTP response object.
- * @param {function} next - A function to call to continue processing the request.
- * @return {undefined}
- */
 const loggingMiddleware = (req, res, next) => {
   console.log("log");
   console.log(`${req.method} - ${req.url}`);
@@ -31,5 +24,4 @@ app.get("/", (req, res) => {
   res.status(201).send({ msg: "hello" });
 });
 
-// users domain routes
-app.use(usersRouter);
+app.use(routes);
