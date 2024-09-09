@@ -1,0 +1,13 @@
+// experimental area
+
+// const testUser = {
+//   id: 4,
+//   name: "test",
+//   age: "30",
+// };
+
+// const result = { ...users[0] };
+// console.log(result);
+
+// console.log(res.json({ id: parseId, name: "romi", age: "30" }));
+// console.log(req.statusCode)
