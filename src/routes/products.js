@@ -21,5 +21,15 @@ export const product = [
 ];
 
 router.get("/api/v1/products", (req, res) => {
-  return res.send(product).status(200);
+  console.log(req.cookies);
+  console.log(req.signedCookies.setCookie);
+  if (
+    req.signedCookies.setCookie &&
+    req.signedCookies.setCookie === "cookieValue"
+  ) {
+    return res.send(product).status(200);
+  }
+  return res.send({ msg: "unauthorized" }).status(201);
 });
+
+export default router;
