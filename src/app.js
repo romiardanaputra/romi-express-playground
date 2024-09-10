@@ -1,6 +1,6 @@
 import express from "express";
-import usersRouter from "./routes/users.js";
 import routes from "./routes/index.js";
+import cookieParser, { signedCookie, signedCookies } from "cookie-parser";
 
 const app = express();
 
@@ -20,7 +20,9 @@ const loggingMiddleware = (req, res, next) => {
 
 app.use(loggingMiddleware);
 
+app.use(cookieParser("secretCookie"));
 app.get("/", (req, res) => {
+  res.cookie("setCookie", "cookieValue", { maxAge: 30000, signed: true });
   res.status(201).send({ msg: "hello" });
 });
 
