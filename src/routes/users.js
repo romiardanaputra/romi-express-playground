@@ -3,11 +3,22 @@ import { checkSchema, matchedData, validationResult } from "express-validator";
 import { createUserSchema, filterUserSchema } from "../validations/users.js";
 import { users } from "../data/index.js";
 import { resolveUserIdx } from "../middlewares/index.js";
+
 const router = Router();
 
 router.get("/api/v1/users", checkSchema(filterUserSchema), (req, res) => {
   const result = validationResult(req);
   console.log(result);
+  console.log(req.session);
+  console.log(req.sessionID);
+  req.session.visited = true;
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    if (err) {
+      console.log(err);
+      throw err;
+    }
+    console.log('users endpoint', sessionData);
+  });
   const {
     query: { filter, value },
   } = req;
