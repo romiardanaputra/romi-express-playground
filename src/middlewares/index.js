@@ -11,3 +11,9 @@ export const resolveUserIdx = (req, res, next) => {
   console.log("result inside resolveUserIdx", userIdx);
   next();
 };
+
+export const loggingMiddleware = (req, res, next) => {
+  console.log("log");
+  console.log(`${req.method} - ${req.url}`);
+  next();
+};
