@@ -3,6 +3,7 @@ import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { loggingMiddleware } from "./middlewares/index.js";
+import { users } from "./data/index.js";
 
 const app = express();
 
@@ -28,6 +29,40 @@ app.get("/", (req, res) => {
   req.session.visited = true;
   res.cookie("setCookie", "cookieValue", { maxAge: 30000, signed: true });
   res.status(201).send({ msg: "hello" });
+});
+
+app.post("/api/v1/auth", (req, res) => {
+  const {
+    body: { name, password },
+  } = req;
+  const findUser = users.find((user) => user.name === name);
+
+  if (!findUser || findUser.password !== password)
+    return res.status(401).send({ msg: "bad credentials" });
+
+  req.session.user = findUser;
+  return res.status(200).send({ msg: "success", findUser });
+});
+
+app.get("/api/v1/auth/status", (req, res) => {
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    console.log(sessionData);
+  });
+  return req.session.user
+    ? res.status(200).send(req.session.user)
+    : res.status(401).send({ msg: "unauthorized" });
+});
+
+app.post("/api/v1/cart", (req, res) => {
+  if (!req.session.user) return res.sendStatus(401);
+  const { body: item } = req;
+  const { cart } = req.session;
+  if (cart) {
+    cart.push(item);
+  } else {
+    return (req.session.cart = [item]);
+  }
+  return res.status(201).send({ msg: "success", cart });
 });
 
 app.use(routes);
