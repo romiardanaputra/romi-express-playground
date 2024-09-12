@@ -2,19 +2,19 @@
 export const users = [
   {
     id: 1,
-    name: "romi",
+    username: "romi",
     age: "30",
     password: "1234",
   },
   {
     id: 2,
-    name: "jong seon",
+    username: "jong seon",
     age: "30",
     password: "joen cantik",
   },
   {
     id: 3,
-    name: "dewi",
+    username: "dewi",
     age: "30",
     password: "dewi manis",
   },
