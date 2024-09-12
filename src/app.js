@@ -3,7 +3,8 @@ import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { loggingMiddleware } from "./middlewares/index.js";
-import { users } from "./data/index.js";
+import passport from "passport";
+import "./strategies/local-strategy.js";
 
 const app = express();
 
@@ -22,50 +23,28 @@ app.use(
   })
 );
 
-app.get("/", (req, res) => {
-  console.log(req.session);
-  console.log(req.session.id);
-  console.log((req.session.visited = true));
-  req.session.visited = true;
-  res.cookie("setCookie", "cookieValue", { maxAge: 30000, signed: true });
-  res.status(201).send({ msg: "hello" });
-});
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.post("/api/v1/auth", (req, res) => {
-  const {
-    body: { name, password },
-  } = req;
-  const findUser = users.find((user) => user.name === name);
-
-  if (!findUser || findUser.password !== password)
-    return res.status(401).send({ msg: "bad credentials" });
-
-  req.session.user = findUser;
-  return res.status(200).send({ msg: "success", findUser });
+app.use(routes);
+app.post("/api/v1/auth", passport.authenticate("local"), (req, res) => {
+  res.sendStatus(200);
 });
 
 app.get("/api/v1/auth/status", (req, res) => {
-  req.sessionStore.get(req.sessionID, (err, sessionData) => {
-    console.log(sessionData);
+  console.log(`Inside auth/status endpoint`);
+  console.log(req.user);
+  return req.user ? res.send(req.user) : res.sendStatus(401);
+});
+
+app.post("/api/v1/auth/logout", (req, res) => {
+  if (!req.user) return res.sendStatus(401);
+  req.logout((err) => {
+    if (err) return res.sendStatus(400);
+    res.send(200);
   });
-  return req.session.user
-    ? res.status(200).send(req.session.user)
-    : res.status(401).send({ msg: "unauthorized" });
+  console.log(`what is inside req.user? ${req.user}`);
 });
-
-app.post("/api/v1/cart", (req, res) => {
-  if (!req.session.user) return res.sendStatus(401);
-  const { body: item } = req;
-  const { cart } = req.session;
-  if (cart) {
-    cart.push(item);
-  } else {
-    return (req.session.cart = [item]);
-  }
-  return res.status(201).send({ msg: "success", cart });
-});
-
-app.use(routes);
 
 const PORT = 3333;
 app.listen(PORT, () => {
