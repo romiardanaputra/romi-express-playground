@@ -5,8 +5,14 @@ import session from "express-session";
 import { loggingMiddleware } from "./middlewares/index.js";
 import passport from "passport";
 import "./strategies/local-strategy.js";
+import mongoose from "mongoose";
 
 const app = express();
+
+mongoose
+  .connect("mongodb://localhost:27017/express-playground")
+  .then(() => console.log(`connected to database`))
+  .catch((err) => console.log(err));
 
 app.use(express.json());
 
