@@ -3,41 +3,30 @@ import { checkSchema, matchedData, validationResult } from "express-validator";
 import { createUserSchema, filterUserSchema } from "../validations/users.js";
 import { users } from "../data/index.js";
 import { resolveUserIdx } from "../middlewares/index.js";
+import { User } from "../schemas/user.js";
 
 const router = Router();
 
-router.get("/api/v1/users", checkSchema(filterUserSchema), (req, res) => {
-  const result = validationResult(req);
-  console.log(result);
-  console.log(req.session);
-  console.log(req.sessionID);
-  req.session.visited = true;
-  req.sessionStore.get(req.sessionID, (err, sessionData) => {
-    if (err) {
-      console.log(err);
-      throw err;
-    }
-    console.log('users endpoint', sessionData);
-  });
-  const {
-    query: { filter, value },
-  } = req;
-  if (filter && value) {
-    return res.send(users.filter((user) => user[filter].includes(value)));
-  }
-  return res.send(users);
-});
+router.get("/api/v1/users", async (req, res) => {});
 
-router.post("/api/v1/users", checkSchema(createUserSchema), (req, res) => {
-  const result = validationResult(req);
-  console.log(result);
-  if (!result.isEmpty())
-    return res.status(400).send({ errors: result.array() });
-  const data = matchedData(req);
-  const createUser = { id: users[users.length - 1].id + 1, ...data };
-  users.push(createUser);
-  return res.status(201).send(createUser);
-});
+router.post(
+  "/api/v1/users",
+  checkSchema(createUserSchema),
+  async (req, res) => {
+    const result = validationResult(req);
+    if (!result.isEmpty())
+      return res.status(400).send({ errors: result.array() });
+    const data = matchedData(req);
+    const newUser = new User(data);
+    try {
+      const savedUser = await newUser.save();
+      return res.status(201).send(savedUser);
+    } catch (err) {
+      console.error(err);
+      return res.sendStatus(400);
+    }
+  }
+);
 
 // get request with params
 router.get("/api/v1/users/:id", resolveUserIdx, (req, res) => {
