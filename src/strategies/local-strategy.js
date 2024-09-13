@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-local";
 import { users } from "../data/index.js";
+import { User } from "../schemas/user.js";
 
 passport.serializeUser((user, done) => {
   console.log(`Inside Serialize User`);
@@ -8,11 +9,11 @@ passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => {
+passport.deserializeUser(async (id, done) => {
   console.log(`Inside deserialize User`);
   console.log(`Deserializing user id ${id}`);
   try {
-    const findUser = users.find((user) => user.id === id);
+    const findUser = await User.findById(id);
     if (!findUser) throw new Error("user not found");
     done(null, findUser);
   } catch (err) {
@@ -21,15 +22,15 @@ passport.deserializeUser((id, done) => {
 });
 
 export default passport.use(
-  new Strategy((username, password, done) => {
+  new Strategy(async (username, password, done) => {
     console.log(`username :${username}`);
     console.log(`password :${password}`);
     try {
-      const findUser = users.find((user) => user.username === username);
+      const findUser = await User.findOne({
+        username,
+      });
       if (!findUser) throw new Error("user not found");
-      if (findUser.password !== password) {
-        throw new Error("invalid credentials");
-      }
+      if (findUser.password !== password) throw new Error("bad credentials");
       done(null, findUser);
     } catch (err) {
       console.log(err);
