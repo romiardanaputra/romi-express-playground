@@ -1,7 +1,7 @@
 import { query } from "express-validator";
 
 export const createUserSchema = {
-  name: {
+  username: {
     notEmpty: {
       errorMessage: "name is required",
     },
@@ -15,6 +15,11 @@ export const createUserSchema = {
     },
     isString: {
       errorMessage: "age must be a string",
+    },
+  },
+  password: {
+    notEmpty: {
+      errorMessage: "password is required",
     },
   },
 };
