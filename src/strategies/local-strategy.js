@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-local";
-import { users } from "../data/index.js";
 import { User } from "../schemas/user.js";
+import { comparePassword } from "../utils/helpers.js";
 
 passport.serializeUser((user, done) => {
   console.log(`Inside Serialize User`);
@@ -30,7 +30,8 @@ export default passport.use(
         username,
       });
       if (!findUser) throw new Error("user not found");
-      if (findUser.password !== password) throw new Error("bad credentials");
+      if (!comparePassword(password, findUser.password))
+        throw new Error("bad credentials");
       done(null, findUser);
     } catch (err) {
       console.log(err);
