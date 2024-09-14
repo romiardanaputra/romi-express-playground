@@ -6,6 +6,7 @@ import { loggingMiddleware } from "./middlewares/index.js";
 import passport from "passport";
 import "./strategies/local-strategy.js";
 import mongoose from "mongoose";
+import MongoStore from "connect-mongo";
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(
     saveUninitialized: false,
     resave: false,
     cookie: { maxAge: 60000 * 60 }, // add secure: true
+    store: MongoStore.create({
+      client: mongoose.connection.getClient(),
+    }),
   })
 );
 
@@ -40,6 +44,8 @@ app.post("/api/v1/auth", passport.authenticate("local"), (req, res) => {
 app.get("/api/v1/auth/status", (req, res) => {
   console.log(`Inside auth/status endpoint`);
   console.log(req.user);
+  console.log(req.session);
+  console.log(req.sessionID);
   return req.user ? res.send(req.user) : res.sendStatus(401);
 });
 
